@@ -1,0 +1,39 @@
+{
+    "id":  "dbz-fuzion-calibrated-qa",
+    "title":  "DBZ Fuzion Calibrated QA",
+    "description":  "In-Foundry QA harness for the DBZ Fuzion Redux system.",
+    "version":  "20.45",
+    "compatibility":  {
+                          "minimum":  "13",
+                          "verified":  "13"
+                      },
+    "authors":  [
+                    {
+                        "name":  "DBZ Fuzion Foundry Project"
+                    }
+                ],
+    "esmodules":  [
+                      "dbz-fuzion-calibrated-qa.mjs"
+                  ],
+    "styles":  [
+                   "styles/qa.css"
+               ],
+    "relationships":  {
+                          "requires":  [
+                                           {
+                                               "id":  "dbz-fuzion-calibrated",
+                                               "type":  "system",
+                                               "compatibility":  {
+                                                                     "minimum":  "0.1.0"
+                                                                 }
+                                           },
+                                           {
+                                               "id":  "dbz-fuzion-gm-tools",
+                                               "type":  "module",
+                                               "compatibility":  {
+                                                                     "minimum":  "0.1.0"
+                                                                 }
+                                           }
+                                       ]
+                      }
+}

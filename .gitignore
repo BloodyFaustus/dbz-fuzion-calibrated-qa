@@ -1,0 +1,11 @@
+# Foundry writes these into every compendium pack while a world is open.
+# LOCK is a runtime lock; LOG / LOG.old are LevelDB's human-readable info logs.
+# The actual pack data (*.ldb, numbered *.log, MANIFEST-*, CURRENT) IS tracked.
+packs/**/LOCK
+packs/**/LOG
+packs/**/LOG.old
+
+# OS cruft
+.DS_Store
+Thumbs.db
+desktop.ini

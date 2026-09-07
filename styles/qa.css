@@ -1,0 +1,132 @@
+/* DBZ Fuzion QA — matches the system's visual language.
+   Tokens come from the system stylesheet's :root; every var() carries a fallback so the panel
+   still renders correctly if the module is loaded without the system. */
+
+.dbzf-qa .window-content {
+  height: 100%;
+  padding: 0;
+  overflow: hidden;
+  background: var(--dbzf-bg-deep, #0E1218);
+}
+
+.dbzf-qa-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  height: 100%;
+  max-height: 100%;
+  overflow-y: auto;
+  color: var(--dbzf-text, #E8EDF4);
+  background: var(--dbzf-bg-deep, #0E1218);
+  font-family: var(--dbzf-font-body, system-ui, sans-serif);
+}
+
+.dbzf-qa-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 6px;
+}
+
+.dbzf-qa-panel button {
+  min-height: 30px;
+  width: auto;
+  padding: 4px 12px;
+  border: 1px solid var(--dbzf-border-strong, #3D4653);
+  border-radius: 4px;
+  background: var(--dbzf-bg-raised, #222833);
+  color: var(--dbzf-text, #E8EDF4);
+  font-family: var(--dbzf-font-body, system-ui, sans-serif);
+  font-size: 13px;
+  font-weight: 600;
+  text-shadow: none;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.dbzf-qa-panel button:hover {
+  background: var(--dbzf-border, #2C333E);
+  border-color: var(--dbzf-ki, #F5A623);
+  color: var(--dbzf-ki, #F5A623);
+}
+
+.dbzf-qa-panel button[data-action="all"] {
+  background: var(--dbzf-ki, #F5A623);
+  border-color: var(--dbzf-ki, #F5A623);
+  color: var(--dbzf-text-on-accent, #10141A);
+  font-weight: 700;
+}
+
+.dbzf-qa-panel button[data-action="all"]:hover {
+  background: var(--dbzf-ki-bright, #FFC93C);
+  border-color: var(--dbzf-ki-bright, #FFC93C);
+  color: var(--dbzf-text-on-accent, #10141A);
+}
+
+.dbzf-qa-warning {
+  margin: 0;
+  padding: 7px 9px;
+  border: 1px solid var(--dbzf-border, #2C333E);
+  border-left: 3px solid var(--dbzf-danger, #E4443A);
+  border-radius: 4px;
+  background: var(--dbzf-bg-input, #0F141A);
+  color: var(--dbzf-danger, #E4443A);
+  font-weight: 700;
+}
+
+.dbzf-qa-summary,
+.dbzf-qa-suite {
+  border: 1px solid var(--dbzf-border, #2C333E);
+  border-radius: 6px;
+  padding: 10px;
+  background: var(--dbzf-bg-panel, #1A1F27);
+}
+
+.dbzf-qa-summary h2,
+.dbzf-qa-suite h3 {
+  margin: 0 0 6px;
+  border: none;
+  font-family: var(--dbzf-font-display, system-ui, sans-serif);
+  font-weight: 400;
+  line-height: 1.25;
+  text-transform: uppercase;
+  color: var(--dbzf-text, #E8EDF4);
+}
+
+.dbzf-qa-summary h2 { font-size: 15px; }
+.dbzf-qa-suite h3 { font-size: 13px; }
+
+.dbzf-qa-summary p,
+.dbzf-qa-suite > p {
+  margin: 0;
+  font-family: var(--dbzf-font-readout, ui-monospace, monospace);
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--dbzf-text-muted, #9BA6B5);
+}
+
+.dbzf-qa-suite ul {
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dbzf-qa-suite li {
+  font-size: 12px;
+  line-height: 1.45;
+  padding: 2px 0 2px 8px;
+  border-left: 2px solid transparent;
+  color: var(--dbzf-text-muted, #9BA6B5);
+}
+
+.dbzf-qa-suite li.passed { border-left-color: var(--dbzf-ready, #4CAF6D); }
+.dbzf-qa-suite li.failed {
+  border-left-color: var(--dbzf-danger, #E4443A);
+  color: var(--dbzf-danger, #E4443A);
+  font-weight: 600;
+}
+.dbzf-qa-suite li.skipped { border-left-color: var(--dbzf-warn, #E0912F); }

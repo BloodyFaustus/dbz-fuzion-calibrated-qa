@@ -1,0 +1,4 @@
+# Compendium packs are LevelDB databases. Never let Git apply text or
+# line-ending conversion to them: rewriting CURRENT or MANIFEST-* to CRLF
+# makes the pack unopenable after a clone on Windows.
+packs/** binary

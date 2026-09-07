@@ -1,0 +1,37 @@
+<section class="dbzf-qa-panel">
+  {{#unless isDbz}}
+    <p class="dbzf-qa-warning">Current system is not dbz-fuzion-calibrated.</p>
+  {{/unless}}
+
+  <div class="dbzf-qa-actions">
+    <button type="button" data-action="all">Run All Tests</button>
+    <button type="button" data-action="calculations">Run Calculation Tests</button>
+    <button type="button" data-action="transformations">Run Transformation Tests</button>
+    <button type="button" data-action="sheets">Run Sheet Interaction Tests</button>
+    <button type="button" data-action="rollsAttacks">Run Roll/Attack Tests</button>
+    <button type="button" data-action="combat">Run Combat Tests</button>
+    <button type="button" data-action="compendia">Run Compendium Tests</button>
+    <button type="button" data-action="seedCompendia">Seed Starter Compendia</button>
+    <button type="button" data-action="export">Export JSON Report</button>
+    <button type="button" data-action="cleanup">Cleanup Fixtures</button>
+    <button type="button" data-action="close">Close Panel</button>
+  </div>
+
+  {{#if report}}
+    <section class="dbzf-qa-summary">
+      <h2>Summary</h2>
+      <p>Passed: {{report.summary.passed}} | Failed: {{report.summary.failed}} | Skipped: {{report.summary.skipped}}</p>
+    </section>
+    {{#each report.suites as |suite|}}
+      <section class="dbzf-qa-suite">
+        <h3>{{suite.name}}</h3>
+        <p>Passed: {{suite.passed}} | Failed: {{suite.failed}} | Skipped: {{suite.skipped}}</p>
+        <ul>
+          {{#each suite.tests as |test|}}
+            <li class="{{test.status}}">{{test.status}} - {{test.name}}{{#if test.error}}: {{test.error}}{{/if}}</li>
+          {{/each}}
+        </ul>
+      </section>
+    {{/each}}
+  {{/if}}
+</section>
