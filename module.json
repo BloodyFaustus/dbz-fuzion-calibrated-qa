@@ -3,6 +3,10 @@
     "title":  "DBZ Fuzion Calibrated QA",
     "description":  "In-Foundry QA harness for the DBZ Fuzion Redux system.",
     "version":  "20.45",
+    "url":  "https://github.com/BloodyFaustus/dbz-fuzion-calibrated-qa",
+    "license":  "https://github.com/BloodyFaustus/dbz-fuzion-calibrated-qa/blob/main/LICENSE",
+    "manifest":  "https://raw.githubusercontent.com/BloodyFaustus/dbz-fuzion-calibrated-qa/main/module.json",
+    "download":  "https://github.com/BloodyFaustus/dbz-fuzion-calibrated-qa/releases/download/v20.45/dbz-fuzion-calibrated-qa.zip",
     "compatibility":  {
                           "minimum":  "13",
                           "verified":  "13"
