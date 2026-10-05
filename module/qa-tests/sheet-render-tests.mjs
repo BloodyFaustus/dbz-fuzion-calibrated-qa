@@ -24,6 +24,39 @@ export async function runSheetRenderTests({ test, assert, createActor }) {
     await sheet.close();
   });
 
+  await test("bio tab splits Biography and Notes evenly beside the identity card", async () => {
+    const actor = await createActor("DBZF QA Bio Layout");
+    await actor.update({ "system.biography": "<p>bio</p>", "system.notes": "<p>notes</p>" });
+    const sheet = actor.sheet;
+    await sheet.render(true);
+    sheet.element.querySelector('[data-action="tab"][data-tab="bio"]')?.click();
+    await new Promise(resolve => setTimeout(resolve, 150));
+
+    const editors = Array.from(sheet.element.querySelectorAll(".dbzf-bio-stack prose-mirror"))
+      .map(node => node.getAttribute("name"));
+    assert(editors.includes("system.biography") && editors.includes("system.notes"),
+      "Bio tab should carry both a Biography and a Notes editor", { actual: editors.join(",") });
+
+    const panels = Array.from(sheet.element.querySelectorAll(".dbzf-bio-panel"));
+    assert(panels.length === 2, "Expected two stacked bio panels", { actual: panels.length });
+    const heights = panels.map(panel => panel.getBoundingClientRect().height);
+    // They share one grid column at 1fr each, so any real difference means the split broke.
+    assert(Math.abs(heights[0] - heights[1]) <= 2, "Biography and Notes should be equal halves",
+      { actual: Math.round(heights[0]) + "px vs " + Math.round(heights[1]) + "px" });
+
+    // Build moved out of the paired grid; Sexuality took its place next to Eyes.
+    const paired = Array.from(sheet.element.querySelectorAll(".dbzf-identity-card .dbzf-grid-2 .dbzf-label"))
+      .map(label => label.textContent.trim());
+    assert(paired.join(",") === "Age,Birth Year,Sex,Hair,Eyes,Sexuality",
+      "Identity paired fields are in the wrong order", { actual: paired.join(",") });
+    const fullWidth = Array.from(sheet.element.querySelectorAll(".dbzf-identity-card > .dbzf-field .dbzf-label"))
+      .map(label => label.textContent.trim());
+    assert(fullWidth.join(",") === "Build,Personality,Gimmick,Species",
+      "Build, Personality and Gimmick should each be full width", { actual: fullWidth.join(",") });
+
+    await sheet.close();
+  });
+
   await test("sheet tabs render and swap panels without a re-render", async () => {
     const actor = await createActor("DBZF QA Tab Sheet");
     const sheet = actor.sheet;
