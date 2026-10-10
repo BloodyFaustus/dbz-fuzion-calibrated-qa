@@ -267,6 +267,34 @@ export async function runReactionTests({ test, assert, createActor }) {
     assert(actor.system.combatState.temporaryCharacteristics.length === 0, "Temporary boost should be cleared on Advance Phase");
   });
 
+  await test("sealed and immobilized last Rating Phases and break at twice their DC", async () => {
+    const attacker = await createActor("DBZF QA Control Source");
+    const target = await createActor("DBZF QA Control Target");
+    await attacker.update({ "system.resources.ki.value": 400, "system.resources.ki.charged": 400 });
+    await target.update({ "system.resources.hits.value": 400, "system.combatState.activeConditions": [] });
+
+    await game.dbzf.rollAttack(attacker, "power", { attackName: "QA Control", qualities: "Sealing 3; Immobilization 2", consumeAction: false });
+    await game.dbzf.applyChatDamage(game.messages.contents.at(-1), { targetActor: target });
+
+    const byKey = Object.fromEntries(target.system.combatState.activeConditions.map(c => [c.key, c]));
+    assert(!!byKey.sealed && !!byKey.immobilized, "Both control conditions should land",
+      { actual: Object.keys(byKey).join(",") });
+    // DC is 10 x rating; the break threshold is twice the DC, so rating x 20 for both.
+    assert(byKey.sealed.saveDC === 30, "Seal 3 should be DC 30", { actual: byKey.sealed.saveDC });
+    assert(byKey.sealed.breakDamageThreshold === 60, "Seal 3 should break at twice its DC", { actual: byKey.sealed.breakDamageThreshold });
+    assert(byKey.immobilized.saveDC === 20, "Immobilization 2 should be DC 20", { actual: byKey.immobilized.saveDC });
+    assert(byKey.immobilized.breakDamageThreshold === 40, "Immobilization 2 should break at twice its DC", { actual: byKey.immobilized.breakDamageThreshold });
+    // Rating doubles as the duration in Phases.
+    assert(byKey.sealed.remainingTicks === 3, "Seal rating should set its Phase duration", { actual: byKey.sealed.remainingTicks });
+    assert(byKey.immobilized.remainingTicks === 2, "Immobilization rating should set its Phase duration", { actual: byKey.immobilized.remainingTicks });
+
+    await game.dbzf.combatState.advancePhase(target);
+    await game.dbzf.combatState.advancePhase(target);
+    const left = target.system.combatState.activeConditions.map(c => c.key);
+    assert(!left.includes("immobilized"), "Immobilization 2 should expire after two Phases", { actual: left.join(",") || "none" });
+    assert(left.includes("sealed"), "Sealing 3 should outlast two Phases", { actual: left.join(",") || "none" });
+  });
+
   await test("Raise Characteristic rejects Combat and over-cap point values", async () => {
     const actor = await createActor("QA Raise Char Limits");
     await actor.update({

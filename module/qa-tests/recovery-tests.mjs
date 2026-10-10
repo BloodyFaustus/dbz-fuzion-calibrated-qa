@@ -57,16 +57,16 @@ export async function runRecoveryTests({ test, assert, createActor }) {
     }]);
     assert(game.dbzf.recoverySettings(namekian).phasesRequired === 1, "Namekians should regenerate every phase", { actual: game.dbzf.recoverySettings(namekian).phasesRequired });
 
-    // Majin Boo lineage regenerates every 2 phases at 2x Physical.
+    // Boo lineage regenerates every Phase, healing 2x Physical + 1x Mental.
     const majin = await createActor("DBZF QA Cadence Majin");
-    await majin.update({ "system.characteristics.physical.base": 12, "system.resources.hits.value": 100 });
+    await majin.update({ "system.characteristics.physical.base": 12, "system.characteristics.mental.base": 5, "system.resources.hits.value": 100 });
     await majin.createEmbeddedDocuments("Item", [{
       name: "QA Majin", type: "species",
       system: { active: true, speciesKey: "majin", regenerationMode: "majinBoo" }
     }]);
-    assert(game.dbzf.recoverySettings(majin).phasesRequired === 2, "Majin Boo lineage should regenerate every 2 phases", { actual: game.dbzf.recoverySettings(majin).phasesRequired });
+    assert(game.dbzf.recoverySettings(majin).phasesRequired === 1, "Boo lineage should regenerate every Phase", { actual: game.dbzf.recoverySettings(majin).phasesRequired });
     const healed = await game.dbzf.recoverHits(majin);
-    assert(healed.healed === 24, "Majin Boo regeneration should heal 2x Physical", { actual: healed.healed });
+    assert(healed.healed === 29, "Boo regeneration should heal 2x Physical + 1x Mental", { actual: healed.healed });
 
     // A GM can still opt out and use their own cadence.
     await majin.update({ "system.combatState.recovery.useSpeciesPhases": false, "system.combatState.recovery.phasesRequired": 5 });
