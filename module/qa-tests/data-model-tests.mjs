@@ -158,4 +158,34 @@ export async function runDataModelTests({ test, assert, createActor, createItem 
 
     await actor.delete();
   });
+
+  await test("new characters link their token data, NPC pack imports do not", async () => {
+    // One actor type serves both PCs and NPCs, and Foundry defaults prototypeToken.actorLink to
+    // false, so a dragged-out character token was a detached copy: damage and Ki on the token
+    // never reached the sheet.
+    const made = await createActor("QA Link Default");
+    assert(made.prototypeToken.actorLink === true,
+      "A hand-made character should link its token data", { actual: made.prototypeToken.actorLink });
+
+    // An explicit choice in the creation data always wins.
+    const optOut = await Actor.create({ name: "QA Link OptOut", type: "character", prototypeToken: { actorLink: false } });
+    assert(optOut.prototypeToken.actorLink === false,
+      "An explicit actorLink in the creation data must be respected", { actual: optOut.prototypeToken.actorLink });
+
+    // Documents written INTO a pack keep the unlinked default, so several copies of one stored
+    // NPC still get their own HITs and Ki. This is the GM Tools seeder's path.
+    const pack = await CompendiumCollection.createCompendium({ type: "Actor", label: "QA Link Pack" });
+    const stored = await pack.importDocument(new Actor.implementation({ name: "QA Packed", type: "character" }));
+    assert(stored.prototypeToken.actorLink === false,
+      "An actor stored in a compendium must stay unlinked", { actual: stored.prototypeToken.actorLink });
+
+    const back = await Actor.create(game.actors.fromCompendium(stored));
+    assert(back.prototypeToken.actorLink === false,
+      "Importing a stored NPC into the world must stay unlinked", { actual: back.prototypeToken.actorLink });
+
+    await back.delete();
+    await optOut.delete();
+    await made.delete();
+    await pack.deleteCompendium();
+  });
 }

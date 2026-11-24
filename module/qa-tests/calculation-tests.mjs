@@ -196,6 +196,81 @@ export async function runCalculationTests({ test, assert, createActor }) {
     assert(actor.system.resources.defense.value === 63, "Combined formula should be 5 + 10 - 2 = 13 (50 + 13)", { actual: actor.system.resources.defense.value });
   });
 
+  await test("Percent Bonus reads a bare percent as a percent, not a share of Battle Power", async () => {
+    const actor = await createActor("QA Percent Mode");
+    await actor.update({
+      "system.characteristics.physical.base": 10,
+      "system.characteristics.combat.base": 20,
+      "system.skills.evasion.rank": 30,
+      "system.resources.battlePower.value": 1000
+    });
+    // Evasion: rank 30 + Combat 20 = total 50. Battle Power 1000.
+    const [buff] = await actor.createEmbeddedDocuments("Item", [{
+      name: "QA Percent Trait", type: "trait",
+      system: { active: true, effects: [
+        { enabled: true, label: "flat", target: "skills.evasion.effectiveRank", mode: "percent", value: 25, valueFormula: "" }
+      ] }
+    }]);
+    actor.prepareData();
+    const fromFlatBox = actor.system.skills.evasion.effectiveRank;
+    assert(fromFlatBox === 38, "Percent Bonus 25 in the flat box should add 25% of the rank (30 -> 38)", { actual: fromFlatBox });
+
+    // The bug: "25%" in the formula box resolved to 25% of Battle Power (250) and was then
+    // applied as "+250 percent". Both boxes must now mean the same thing.
+    await buff.update({ "system.effects": [{ enabled: true, label: "formula", target: "skills.evasion.effectiveRank", mode: "percent", value: 0, valueFormula: "25%" }] });
+    actor.prepareData();
+    assert(actor.system.skills.evasion.effectiveRank === fromFlatBox,
+      "Percent Bonus with a bare 25% must match a flat 25, not read Battle Power",
+      { actual: actor.system.skills.evasion.effectiveRank, expected: fromFlatBox });
+    assert(buff.system.effects[0].valueResolved === 25,
+      "The displayed value must be the percent actually applied", { actual: buff.system.effects[0].valueResolved });
+    assert(buff.system.effects[0].valueDisplay === "+25%",
+      "Percent Bonus rows should display their units", { actual: buff.system.effects[0].valueDisplay });
+
+    // Add mode is unchanged: a bare percent still reads Battle Power.
+    await buff.update({ "system.effects": [{ enabled: true, label: "bp", target: "resources.defense.value", mode: "add", value: 0, valueFormula: "5%" }] });
+    actor.prepareData();
+    assert(buff.system.effects[0].valueResolved === 50,
+      "Add mode must still read a bare percent as a share of Battle Power", { actual: buff.system.effects[0].valueResolved });
+  });
+
+  await test("formulas accept a trailing total and a self reference", async () => {
+    const actor = await createActor("QA Self Ref");
+    await actor.update({
+      "system.characteristics.physical.base": 10,
+      "system.characteristics.combat.base": 20,
+      "system.skills.evasion.rank": 30,
+      "system.resources.battlePower.value": 1000
+    });
+    const [buff] = await actor.createEmbeddedDocuments("Item", [{
+      name: "QA Self Trait", type: "trait",
+      system: { active: true, effects: [
+        { enabled: true, label: "total word", target: "resources.defense.value", mode: "add", value: 0, valueFormula: "25%(evasion total)" }
+      ] }
+    }]);
+    actor.prepareData();
+    // "evasion total" used to resolve to nothing and silently contribute 0.
+    assert(buff.system.effects[0].valueResolved === 13,
+      "A trailing 'total' should resolve like the bare reference (25% of 50)", { actual: buff.system.effects[0].valueResolved });
+
+    // "self" reads the total of the stat being modified, so one row scales off each skill.
+    await buff.update({ "system.effects": [{ enabled: true, label: "self", target: "skills.evasion.effectiveRank", mode: "add", value: 0, valueFormula: "25%(self)" }] });
+    actor.prepareData();
+    assert(actor.system.skills.evasion.effectiveRank === 43,
+      "25%(self) on Evasion should add 25% of its total (30 + 13)", { actual: actor.system.skills.evasion.effectiveRank });
+
+    // The case that was impossible before: every skill up by a share of ITS OWN total.
+    await buff.update({ "system.effects": [{ enabled: true, label: "all self", target: "skills.all.effectiveRank", mode: "add", value: 0, valueFormula: "50%(self)" }] });
+    actor.prepareData();
+    // Evasion total 50 -> +25; Body total = rank 0 + Physical 10 = 10 -> +5.
+    assert(actor.system.skills.evasion.effectiveRank === 55,
+      "All-skills self should scale Evasion off the Evasion total", { actual: actor.system.skills.evasion.effectiveRank });
+    assert(actor.system.skills.body.effectiveRank === 5,
+      "All-skills self must use each skill's own total, not one shared number", { actual: actor.system.skills.body.effectiveRank });
+    assert(buff.system.effects[0].valueDisplay === "per target",
+      "An all-skills self row cannot show one number", { actual: buff.system.effects[0].valueDisplay });
+  });
+
   await test("XP/BP band interpolation APIs match calibration table", () => {
     assert(game.dbzf.xpFromBattlePower(750) === 50, "BP 750 XP mismatch");
     assert(game.dbzf.xpFromBattlePower(4000) === 250, "BP 4000 XP mismatch");
